@@ -7,7 +7,7 @@ public:
         vector<int> vis(n, 0);
 
         priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
-        pq.push({0, 0}); // {cost, point_index}
+        pq.push({0, 0});
 
         while (NodesCount < n) {
             auto [currCost, u] = pq.top();
