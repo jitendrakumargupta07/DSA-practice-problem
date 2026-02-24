@@ -1,10 +1,10 @@
 class Solution {
 public:
-    bool isMatch(std::string s, std::string p) {
+    bool isMatch(string s, string p) {
         int m = s.length();
         int n = p.length();
 
-        std::vector<std::vector<bool>> dp(m + 1, std::vector<bool>(n + 1, false));
+        vector<vector<bool>> dp(m + 1, vector<bool>(n + 1, false));
         dp[0][0] = true;
 
         for (int j = 1; j <= n; j++) {
