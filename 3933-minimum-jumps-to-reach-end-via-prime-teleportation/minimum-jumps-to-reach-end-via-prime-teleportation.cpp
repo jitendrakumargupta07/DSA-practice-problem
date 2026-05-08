@@ -1,95 +1,95 @@
 class Solution {
 public:
-    
-    bool isPrime(int x) {
-        if (x < 2) return false;
+    int minJumps(vector<int>& nums) 
+    {
+        int n = nums.size();
+        if (n == 1) return 0;
 
-        for (int i = 2; i * i <= x; i++) {
-            if (x % i == 0) return false;
-        }
+        int mx = *max_element(nums.begin(), nums.end());
 
-        return true;
-    }
+        // Smallest Prime Factor sieve
+        vector<int> spf(mx + 1);
+        for (int i = 0; i <= mx; i++) spf[i] = i;
 
-    vector<int> getPrimeFactors(int x) {
-        vector<int> factors;
-
-        for (int p = 2; p * p <= x; p++) {
-            if (x % p == 0) {
-                factors.push_back(p);
-
-                while (x % p == 0) {
-                    x /= p;
+        for (int i = 2; i * i <= mx; i++) 
+        {
+            if (spf[i] == i) 
+            {
+                for (int j = i * i; j <= mx; j += i) 
+                {
+                    if (spf[j] == j)
+                        spf[j] = i;
                 }
             }
         }
 
-        if (x > 1) {
-            factors.push_back(x);
-        }
+        // prime -> indices divisible by prime
+        unordered_map<int, vector<int>> bucket;
 
-        return factors;
-    }
+        for (int i = 0; i < n; i++) 
+        {
+            int x = nums[i];
+            unordered_set<int> primes;
 
-    int minJumps(vector<int>& nums) {
+            while (x > 1) 
+            {
+                int p = spf[x];
+                primes.insert(p);
+                while (x % p == 0) x /= p;
+            }
 
-        int n = nums.size();
-
-        unordered_map<int, vector<int>> mp;
-
-        // store indices divisible by each prime
-        for (int i = 0; i < n; i++) {
-
-            vector<int> factors = getPrimeFactors(nums[i]);
-
-            for (int p : factors) {
-                mp[p].push_back(i);
+            for (int p : primes) 
+            {
+                bucket[p].push_back(i);
             }
         }
 
-        vector<int> vis(n, 0);
+        vector<int> dist(n, -1);
+        queue<int> q;
 
-        queue<pair<int,int>> q;
+        dist[0] = 0;
+        q.push(0);
 
-        q.push({0, 0});
-        vis[0] = 1;
-
-        unordered_set<int> usedPrime;
-
-        while (!q.empty()) {
-
-            auto [idx, steps] = q.front();
+        while (!q.empty()) 
+        {
+            int i = q.front();
             q.pop();
 
-            if (idx == n - 1) {
-                return steps;
+            int d = dist[i];
+
+            if (i == n - 1) return d;
+
+            // Adjacent moves
+            if (i - 1 >= 0 && dist[i - 1] == -1) 
+            {
+                dist[i - 1] = d + 1;
+                q.push(i - 1);
             }
 
-            // adjacent left
-            if (idx - 1 >= 0 && !vis[idx - 1]) {
-                vis[idx - 1] = 1;
-                q.push({idx - 1, steps + 1});
+            if (i + 1 < n && dist[i + 1] == -1) 
+            {
+                dist[i + 1] = d + 1;
+                q.push(i + 1);
             }
 
-            // adjacent right
-            if (idx + 1 < n && !vis[idx + 1]) {
-                vis[idx + 1] = 1;
-                q.push({idx + 1, steps + 1});
-            }
+            // Prime teleportation
+            int val = nums[i];
 
-            // teleport
-            int val = nums[idx];
+            if (val >= 2 && spf[val] == val) 
+            {
+                int p = val;
 
-            if (isPrime(val) && !usedPrime.count(val)) {
-
-                usedPrime.insert(val);
-
-                for (int nextIdx : mp[val]) {
-
-                    if (!vis[nextIdx]) {
-                        vis[nextIdx] = 1;
-                        q.push({nextIdx, steps + 1});
+                if (bucket.count(p)) {
+                    for (int nxt : bucket[p]) 
+                    {
+                        if (dist[nxt] == -1) 
+                        {
+                            dist[nxt] = d + 1;
+                            q.push(nxt);
+                        }
                     }
+
+                    bucket.erase(p);
                 }
             }
         }
