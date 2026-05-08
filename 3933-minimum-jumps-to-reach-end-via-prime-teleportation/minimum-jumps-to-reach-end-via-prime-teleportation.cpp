@@ -3,93 +3,91 @@ public:
     int minJumps(vector<int>& nums) 
     {
         int n = nums.size();
-        if (n == 1) return 0;
 
-        int mx = *max_element(nums.begin(), nums.end());
+        if (n == 1)
+            return 0;
 
-        // Smallest Prime Factor sieve
-        vector<int> spf(mx + 1);
-        for (int i = 0; i <= mx; i++) spf[i] = i;
+        int limit = *max_element(nums.begin(), nums.end());
 
-        for (int i = 2; i * i <= mx; i++) 
+        vector<int> smallest(limit + 1);
+
+        for (int i = 0; i <= limit; i++)
+            smallest[i] = i;
+
+        for (int i = 2; i * i <= limit; i++)
         {
-            if (spf[i] == i) 
+            if (smallest[i] == i)
             {
-                for (int j = i * i; j <= mx; j += i) 
+                for (int j = i * i; j <= limit; j += i)
                 {
-                    if (spf[j] == j)
-                        spf[j] = i;
+                    if (smallest[j] == j)
+                        smallest[j] = i;
                 }
             }
         }
 
-        // prime -> indices divisible by prime
-        unordered_map<int, vector<int>> bucket;
+        unordered_map<int, vector<int>> mp;
 
-        for (int i = 0; i < n; i++) 
+        for (int i = 0; i < n; i++)
         {
-            int x = nums[i];
-            unordered_set<int> primes;
+            int val = nums[i];
+            unordered_set<int> st;
 
-            while (x > 1) 
+            while (val > 1)
             {
-                int p = spf[x];
-                primes.insert(p);
-                while (x % p == 0) x /= p;
+                int factor = smallest[val];
+                st.insert(factor);
+
+                while (val % factor == 0)
+                    val /= factor;
             }
 
-            for (int p : primes) 
-            {
-                bucket[p].push_back(i);
-            }
+            for (auto &x : st)
+                mp[x].push_back(i);
         }
 
-        vector<int> dist(n, -1);
-        queue<int> q;
+        vector<int> vis(n, -1);
+        queue<int> qu;
 
-        dist[0] = 0;
-        q.push(0);
+        qu.push(0);
+        vis[0] = 0;
 
-        while (!q.empty()) 
+        while (!qu.empty())
         {
-            int i = q.front();
-            q.pop();
+            int idx = qu.front();
+            qu.pop();
 
-            int d = dist[i];
+            if (idx == n - 1)
+                return vis[idx];
 
-            if (i == n - 1) return d;
-
-            // Adjacent moves
-            if (i - 1 >= 0 && dist[i - 1] == -1) 
+            if (idx - 1 >= 0 && vis[idx - 1] == -1)
             {
-                dist[i - 1] = d + 1;
-                q.push(i - 1);
+                vis[idx - 1] = vis[idx] + 1;
+                qu.push(idx - 1);
             }
 
-            if (i + 1 < n && dist[i + 1] == -1) 
+            if (idx + 1 < n && vis[idx + 1] == -1)
             {
-                dist[i + 1] = d + 1;
-                q.push(i + 1);
+                vis[idx + 1] = vis[idx] + 1;
+                qu.push(idx + 1);
             }
 
-            // Prime teleportation
-            int val = nums[i];
+            int cur = nums[idx];
 
-            if (val >= 2 && spf[val] == val) 
+            if (cur >= 2 && smallest[cur] == cur)
             {
-                int p = val;
-
-                if (bucket.count(p)) {
-                    for (int nxt : bucket[p]) 
+                if (mp.find(cur) != mp.end())
+                {
+                    for (auto &next : mp[cur])
                     {
-                        if (dist[nxt] == -1) 
+                        if (vis[next] == -1)
                         {
-                            dist[nxt] = d + 1;
-                            q.push(nxt);
+                            vis[next] = vis[idx] + 1;
+                            qu.push(next);
                         }
                     }
 
-                    bucket.erase(p);
+                    mp.erase(cur);
                 }
             }
         }
